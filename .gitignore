@@ -13,3 +13,6 @@ jspm_packages
 
 # dynamodb directories
 .dynamodb
+
+# environment variables
+.env
