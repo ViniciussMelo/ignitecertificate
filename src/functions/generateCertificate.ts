@@ -1,11 +1,13 @@
 import fs from "fs";
 import path from "path";
 import dayjs from "dayjs";
-import { compile } from "../utils/compile";
-import { generatePDF } from "../utils/generatePDF";
-import { document } from "../utils/dynamodbClient";
+import { APIGatewayProxyHandler } from "aws-lambda";
 
+import { compile } from "../utils/compile";
+import { document } from "../utils/dynamodbClient";
+import { generatePDF } from "../utils/generatePDF";
 import { putObjectS3 } from "../utils/putObjectS3";
+import { userAlreadyExists } from "../utils/userAlreadyExists";
 
 interface ICreateCertificate {
   id: string;
@@ -13,19 +15,23 @@ interface ICreateCertificate {
   grade: string;
 }
 
-export const handle = async (event) => {
+export const handle: APIGatewayProxyHandler = async (event) => {
   const { id, name, grade } = JSON.parse(event.body) as ICreateCertificate;
 
-  await document
-    .put({
-      TableName: "users_certificates",
-      Item: {
-        id,
-        name,
-        grade,
-      },
-    })
-    .promise();
+  const userExists = await userAlreadyExists(id);
+
+  if (!userExists) {
+    await document
+      .put({
+        TableName: "users_certificates",
+        Item: {
+          id,
+          name,
+          grade,
+        },
+      })
+      .promise();
+  }
 
   const date = dayjs().format("DD/MM/YYYY");
   const medalPath = path.join(process.cwd(), "src", "templates", "selo.png");
