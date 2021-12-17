@@ -16,3 +16,6 @@ jspm_packages
 
 # environment variables
 .env
+
+# certificate pdf file
+certificate.pdf

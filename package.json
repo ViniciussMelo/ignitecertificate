@@ -3,14 +3,20 @@
   "version": "1.0.0",
   "description": "Serverless aws-nodejs-typescript template",
   "scripts": {
+    "deploy": "sls deploy -v",
     "dev": "serverless offline",
     "dynamo:start": "sls dynamodb start",
-    "deploy": "sls deploy -v"
+    "postinstall": "node node_modules/puppeteer-core/install.js"
   },
   "dependencies": {
     "@middy/core": "^2.5.3",
     "@middy/http-json-body-parser": "^2.5.3",
     "aws-sdk": "^2.1046.0",
+    "chrome-aws-lambda": "^10.1.0",
+    "dayjs": "^1.10.7",
+    "dotenv": "^10.0.0",
+    "handlebars": "^4.7.7",
+    "puppeteer-core": "^13.0.0",
     "source-map-support": "^0.5.19"
   },
   "devDependencies": {
