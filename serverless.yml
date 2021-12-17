@@ -1,12 +1,20 @@
 service:
   name: ignitecertificate
 
+useDotenv: true
+
 plugins:
   - serverless-offline
   - serverless-webpack
   - serverless-dynamodb-local
+  - serverless-dotenv-plugin
 
 custom:
+  dotenv:
+    path: ".env"
+    include:
+      - AWS_BUCKET_NAME
+      - AWS_BUCKET_URL
   webpack:
     webpackConfig: ./webpack.config.js
     includeModules: true
@@ -18,11 +26,24 @@ custom:
       port: 8000
       inMemory: true # Create a folder with dynamo
       migrate: true
+  bucket: serverless--certificates--ignite
 
 provider:
   name: aws
   runtime: nodejs14.x
   region: sa-east-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:*
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - s3:*
+        - s3:PutObject
+        - s3:PutObjectAcl
+      Resource:
+        - "arn:aws:s3:::${self:custom.bucket}/*"
 
 functions:
   generateCertificate:
@@ -32,6 +53,19 @@ functions:
           path: /generateCertificate
           method: POST
           cors: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:PutItem
+          - dynamodb:UpdateItem
+        Resource: "arn:aws:dynamodb:${self.provider.region}:*:table/users_certificates"
+      - Effect: Allow
+        Action:
+          - s3:*
+          - s3:PutObject
+          - s3:PutObjectAcl
+        Resource: "arn:aws:s3:::${self:custom.bucket}/*"
   verifyCertificate:
     handler: src/functions/verifyCertificate.handle
     events:
@@ -39,6 +73,11 @@ functions:
           path: /verifyCertificate/{id}
           method: GET
           cors: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: "arn:aws:dynamodb:${self.provider.region}:*:table/users_certificates"
 
 resources:
   Resources:
